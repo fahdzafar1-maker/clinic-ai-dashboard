@@ -9,22 +9,34 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "return=minimal" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"channel\": \"call\",\n  \"patient_name\": {{ JSON.stringify($json.patient_name ?? null) }},\n  \"phone_masked\": {{ JSON.stringify($json.phone ?? null) }},\n  \"language\": {{ JSON.stringify($json.language ?? null) }},\n  \"summary\": {{ JSON.stringify($json.summary ?? null) }},\n  \"outcome\": {{ JSON.stringify($json.outcome ?? 'info') }},\n  \"duration_sec\": {{ $json.duration_sec ?? null }},\n  \"recording_url\": {{ JSON.stringify($json.recording_url ?? null) }},\n  \"appointment_time\": {{ JSON.stringify($json.appointment_time ?? null) }},\n  \"doctor\": {{ JSON.stringify($json.doctor ?? null) }},\n  \"service\": {{ JSON.stringify($json.service ?? null) }}\n}",
+        "jsonBody": "={\n  \"clinic_id\": \"YOUR-CLINIC-ID\",\n  \"channel\": \"call\",\n  \"patient_name\": {{ JSON.stringify($json.patient_name ?? null) }},\n  \"phone_masked\": {{ JSON.stringify($json.phone ?? null) }},\n  \"language\": {{ JSON.stringify($json.language ?? null) }},\n  \"summary\": {{ JSON.stringify($json.summary ?? null) }},\n  \"outcome\": {{ JSON.stringify($json.outcome ?? 'info') }},\n  \"duration_sec\": {{ $json.duration_sec ?? null }},\n  \"recording_url\": {{ JSON.stringify($json.recording_url ?? null) }},\n  \"appointment_time\": {{ JSON.stringify($json.appointment_time ?? null) }},\n  \"doctor\": {{ JSON.stringify($json.doctor ?? null) }},\n  \"service\": {{ JSON.stringify($json.service ?? null) }}\n}",
         "options": {}
       },
       "name": "Log to Clinic Dashboard",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "onError": "continueRegularOutput",
       "credentials": {
-        "supabaseApi": { "id": "", "name": "Supabase (service role)" }
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase (service role)"
+        }
       }
     }
   ],
