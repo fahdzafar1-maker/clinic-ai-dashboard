@@ -11,6 +11,11 @@ const SearchCtx = createContext('');
 /** Lower-cased text from the top-bar search box. */
 export const useSearch = () => useContext(SearchCtx);
 
+/** Where demo visitors go to talk to sales (WhatsApp/Calendly link). */
+export const BOOK_CALL_URL = process.env.NEXT_PUBLIC_BOOK_CALL_URL || '';
+
+const PUBLIC_PAGES = ['/login', '/get-demo'];
+
 export function Logo({ size = 40 }: { size?: number }) {
   const { config, preset } = useClinic();
   if (config.logoUrl) {
@@ -20,27 +25,71 @@ export function Logo({ size = 40 }: { size?: number }) {
   return <span className="logo-icon"><Icon name={preset.icon} size={size} /></span>;
 }
 
+function Notice({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="login">
+      <div className="card login-card notice-card">
+        <Logo size={44} />
+        <h1>{title}</h1>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function Shell({ children }: { children: React.ReactNode }) {
-  const { config, labels, settings, source, online, session, authReady, signOut, today, rows } = useClinic();
+  const {
+    mode, config, labels, settings, source, session, authReady, signOut, today, rows,
+    clinics, clinic, selectClinic, isAdmin, demoState, href,
+  } = useClinic();
   const pathname = usePathname();
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [navOpen, setNavOpen] = useState(false);
 
-  const isLogin = pathname === '/login';
-  const needsLogin = online && authReady && !session;
+  const isPublic = PUBLIC_PAGES.includes(pathname);
+  const needsLogin = mode === 'app' && authReady && !session;
 
   useEffect(() => {
-    if (needsLogin && !isLogin) router.replace('/login');
-    if (online && session && isLogin) router.replace('/');
-  }, [needsLogin, isLogin, online, session, router]);
+    if (needsLogin && !isPublic) router.replace('/login');
+    if (mode === 'app' && session && pathname === '/login') router.replace('/');
+  }, [needsLogin, isPublic, mode, session, pathname, router]);
 
   useEffect(() => { document.title = `${config.name} · AI Front Desk`; }, [config.name]);
   useEffect(() => setNavOpen(false), [pathname]);
 
-  if (isLogin) return <>{children}</>;
-  if (!authReady || needsLogin) return <div className="splash"><Logo size={48} /></div>;
+  if (isPublic) return <>{children}</>;
+  if (!authReady || needsLogin || demoState === 'loading') return <div className="splash"><Logo size={48} /></div>;
 
+  if (demoState === 'missing') {
+    return (
+      <Notice title="This demo isn’t available">
+        <p className="muted">The link may be mistyped, or this clinic already moved on to a trial.</p>
+        <Link href="/get-demo" className="btn btn-primary">Get your own free demo</Link>
+      </Notice>
+    );
+  }
+  if (mode === 'app' && source !== 'loading' && !clinic) {
+    return (
+      <Notice title="No clinic linked yet">
+        <p className="muted">Your login works, but it isn’t connected to a clinic. Please contact your account manager.</p>
+        <button className="btn btn-ghost" onClick={signOut}>Sign out</button>
+      </Notice>
+    );
+  }
+  if (mode === 'app' && clinic && (clinic.status === 'expired' || clinic.status === 'paused') && !isAdmin) {
+    return (
+      <Notice title={clinic.status === 'expired' ? 'Your 7-day trial has ended' : 'This account is paused'}>
+        <p className="muted">Thank you for trying the AI front desk for {clinic.name}. Your data is safe — continue with a plan to switch it back on.</p>
+        {BOOK_CALL_URL && <a href={BOOK_CALL_URL} className="btn btn-primary" target="_blank" rel="noreferrer">Talk to us</a>}
+        <button className="btn btn-ghost" onClick={signOut}>Sign out</button>
+      </Notice>
+    );
+  }
+
+  const trialDaysLeft = clinic?.status === 'trial' && clinic.trial_ends_at
+    ? Math.max(0, Math.ceil((new Date(clinic.trial_ends_at).getTime() - Date.now()) / 864e5))
+    : null;
   const forwardedToday = rows.filter((r) => r.outcome === 'forwarded' && dayKey(r.created_at, config.timezone) === today).length;
   const nav: { href: string; label: string; icon: IconName; badge?: number; cls?: string }[] = [
     { href: '/', label: 'Dashboard', icon: 'home' },
@@ -50,6 +99,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { href: '/reports', label: 'Reports', icon: 'barChart' },
     { href: '/settings', label: 'Settings', icon: 'settings' },
   ];
+  if (isAdmin && mode === 'app') nav.push({ href: '/leads', label: 'Leads & demos', icon: 'users' });
 
   return (
     <SearchCtx.Provider value={query.trim().toLowerCase()}>
@@ -76,35 +126,47 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </label>
 
         <div className="topbar-right">
-          <Link href="/calendar" className="date-picker" title="Today in clinic time">
+          {mode === 'app' && clinics.length > 1 && (
+            <select className="select clinic-switch" value={clinic?.id ?? ''} onChange={(e) => selectClinic(e.target.value)} aria-label="Switch clinic">
+              {clinics.map((c) => <option key={c.id} value={c.id}>{c.name}{c.status !== 'active' ? ` (${c.status})` : ''}</option>)}
+            </select>
+          )}
+          <Link href={href('/calendar')} className="date-picker" title="Today in clinic time">
             <Icon name="calendar" />
             <span>{formatDayLong(today)}</span>
             <Icon name="chevronDown" />
           </Link>
-          <div className="profile">
-            <span className="avatar avatar-lg">{(session?.user.email ?? 'FD').slice(0, 2).toUpperCase()}</span>
-            <span className="profile-text">
-              <span className="profile-name">{session?.user.email ?? 'Front Desk'}</span>
-              <span className="profile-role">{online ? 'Signed in' : 'Offline demo'}</span>
-            </span>
-            {online && (
-              <button className="icon-btn" onClick={signOut} title="Sign out" aria-label="Sign out">
-                <Icon name="logout" />
-              </button>
-            )}
-          </div>
+          {mode === 'demo' ? (
+            BOOK_CALL_URL && <a href={BOOK_CALL_URL} target="_blank" rel="noreferrer" className="btn btn-primary">Get this for my clinic</a>
+          ) : (
+            <div className="profile">
+              <span className="avatar avatar-lg">{(session?.user.email ?? 'FD').slice(0, 2).toUpperCase()}</span>
+              <span className="profile-text">
+                <span className="profile-name">{session?.user.email ?? 'Front Desk'}</span>
+                <span className="profile-role">{isAdmin ? 'Agency admin' : mode === 'app' ? 'Signed in' : 'Offline demo'}</span>
+              </span>
+              {mode === 'app' && (
+                <button className="icon-btn" onClick={signOut} title="Sign out" aria-label="Sign out">
+                  <Icon name="logout" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
       <aside className={`sidebar ${navOpen ? 'open' : ''}`}>
         <nav className="nav">
-          {nav.map((n) => (
-            <Link key={n.href} href={n.href} className={pathname === n.href ? 'active' : ''}>
-              <span className={n.cls}><Icon name={n.icon} /></span>
-              {n.label}
-              {n.badge ? <span className="badge" title="Forwarded today">{n.badge}</span> : null}
-            </Link>
-          ))}
+          {nav.map((n) => {
+            const target = href(n.href);
+            return (
+              <Link key={n.href} href={target} className={pathname === target ? 'active' : ''}>
+                <span className={n.cls}><Icon name={n.icon} /></span>
+                {n.label}
+                {n.badge ? <span className="badge" title="Forwarded today">{n.badge}</span> : null}
+              </Link>
+            );
+          })}
         </nav>
         <div className="promo">
           <svg className="skyline" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
@@ -126,18 +188,32 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="main">
-        {settings.demo_mode && (
+        {mode === 'demo' && (
+          <div className="banner banner-cta">
+            <Icon name="sparkle" />
+            <span><b>Live demo for {config.name}.</b> Everything here runs on sample data — this is how your AI front desk would look.</span>
+            {BOOK_CALL_URL && <a href={BOOK_CALL_URL} target="_blank" rel="noreferrer" className="btn btn-primary">Start my 7-day free trial</a>}
+          </div>
+        )}
+        {trialDaysLeft != null && (
+          <div className="banner banner-sample">
+            <Icon name="info" />
+            <span><b>Free trial</b> – {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} left.</span>
+            {BOOK_CALL_URL && <a href={BOOK_CALL_URL} target="_blank" rel="noreferrer" className="link">Keep it running</a>}
+          </div>
+        )}
+        {mode !== 'demo' && settings.demo_mode && (
           <div className="banner banner-demo">
             <Icon name="info" />
             <span><b>Demo mode</b> – data auto-deletes after {settings.retention_days} days</span>
-            <Link href="/settings" className="link">Change</Link>
+            <Link href={href('/settings')} className="link">Change</Link>
           </div>
         )}
-        {source === 'sample' && (
+        {mode !== 'demo' && source === 'sample' && (
           <div className="banner banner-sample">
             <Icon name="pulse" />
             <span>
-              {online
+              {mode === 'app'
                 ? 'No activity rows yet. Showing sample data until your n8n workflows send the first row.'
                 : 'Supabase isn’t connected, so this is sample data. Add your keys to .env.local to go live.'}
             </span>

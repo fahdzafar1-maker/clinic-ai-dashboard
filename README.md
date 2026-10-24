@@ -22,7 +22,7 @@ npm run dev                  # http://localhost:3000
 ## 2. Set up Supabase (free tier)
 
 1. Create a project at supabase.com.
-2. **SQL Editor** → paste and run [`supabase/schema.sql`](supabase/schema.sql). It creates:
+2. **SQL Editor** → run [`supabase/migrations/001_initial.sql`](supabase/migrations/001_initial.sql), then [`002_multi_clinic.sql`](supabase/migrations/002_multi_clinic.sql) (multi-clinic + instant demos, see below). 001 creates:
    - the `activity` table with CHECK constraints, indexes, and a phone-masking trigger
    - the `settings` table (single row: `demo_mode`, `retention_days` ∈ {3, 7}, `clinic` jsonb)
    - RLS policies (signed-in users can read, and can update settings), Realtime publication, and the `purge-old-activity` pg_cron job (daily, 03:00 UTC)
@@ -39,6 +39,13 @@ npm run dev                  # http://localhost:3000
 1. Push this folder to a GitHub repo.
 2. vercel.com → **Add New Project** → import the repo (framework is detected as Next.js).
 3. Add the two `NEXT_PUBLIC_SUPABASE_*` environment variables → **Deploy**.
+
+## Multi-clinic & instant demos (002)
+
+- Every clinic is a row in `clinics` (`status`: demo · trial · active · paused · expired). Users see only clinics they are members of (`clinic_members`); agency staff in `platform_admins` see all, plus the **Leads & demos** page.
+- `/get-demo` is a public form. It posts to the n8n **DEMO-01** webhook (`NEXT_PUBLIC_DEMO_WEBHOOK_URL`), which calls `public.create_demo(...)` and replies with the demo link.
+- `/demo/<slug>` is a public, branded demo on sample data. It only works while the clinic’s status is `demo`; every open is counted on the lead (`demo_views`).
+- Optional env: `NEXT_PUBLIC_BOOK_CALL_URL` (e.g. a `https://wa.me/…` link) for the “Start my 7-day free trial” buttons.
 
 ## 4. Configure the clinic
 
@@ -72,6 +79,7 @@ The service key bypasses RLS, so keep it in an n8n credential, not in the workfl
 
 ```json
 {
+  "clinic_id": "<this clinic’s ID — shown on Settings → n8n integration>",
   "channel": "call",
   "patient_name": "Ayesha Khan",
   "phone_masked": "+971501234567",
@@ -88,6 +96,7 @@ The service key bypasses RLS, so keep it in an n8n credential, not in the workfl
 
 | Field | Required | Values / notes |
 |---|---|---|
+| `clinic_id` | ✅ | UUID of the clinic (Settings → n8n integration). Rows without it are rejected |
 | `channel` | ✅ | `call` · `whatsapp` · `voice_note` · `web` |
 | `outcome` | ✅ | `booked` · `forwarded` · `info` · `cancelled` |
 | `patient_name` | | null if unknown (the masked phone is shown instead) |
@@ -168,6 +177,7 @@ lib/phone.ts              phone masking (mirrors public.mask_phone in SQL)
 components/ClinicProvider.tsx   config, settings, auth, data loading, Realtime
 components/widgets.tsx    KPI cards, calendar, feed, chart, calls table
 app/*/page.tsx            the pages
-supabase/schema.sql       tables, RLS, Realtime, masking trigger, pg_cron
+supabase/migrations/      001 initial schema, 002 multi-clinic + demos (run in order)
+docs/ROADMAP.md           master plan: modules, guardrails, evals, phases
 n8n/log-activity-node.json  paste-able n8n HTTP Request node
 ```

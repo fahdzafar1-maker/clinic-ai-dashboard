@@ -65,3 +65,17 @@ export interface AppSettings {
   demo_mode: boolean;
   retention_days: 3 | 7;
 }
+
+export type ClinicStatus = 'demo' | 'trial' | 'active' | 'paused' | 'expired';
+
+/** One row of the Supabase `clinics` table. */
+export interface ClinicRow {
+  id: string;
+  slug: string;
+  name: string;
+  status: ClinicStatus;
+  config: Partial<ClinicConfig> | null;
+  demo_mode: boolean;
+  retention_days: number;
+  trial_ends_at: string | null;
+}
