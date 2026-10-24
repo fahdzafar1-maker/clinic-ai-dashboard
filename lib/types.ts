@@ -52,6 +52,8 @@ export interface ClinicConfig {
   primary: string;
   accent: string;
   preset: PresetKey;
+  /** Calling code without + (971 UAE, 44 UK, 92 Pakistan…). Used for phone masking and sample numbers. */
+  countryCode: string;
   /** IANA timezone the clinic runs in; "today" and calendar hours use it. */
   timezone: string;
   /** Opening hours shown on the calendar, 24h clock. */
@@ -77,5 +79,5 @@ export interface ClinicRow {
   config: Partial<ClinicConfig> | null;
   demo_mode: boolean;
   retention_days: number;
-  trial_ends_at: string | null;
+  expires_at: string | null;
 }

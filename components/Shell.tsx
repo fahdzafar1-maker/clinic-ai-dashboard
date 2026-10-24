@@ -64,7 +64,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   if (demoState === 'missing') {
     return (
       <Notice title="This demo isn’t available">
-        <p className="muted">The link may be mistyped, or this clinic already moved on to a trial.</p>
+        <p className="muted">Demo links stay open for 7 days. This one has expired, was mistyped, or the clinic has already moved on to a trial.</p>
         <Link href="/get-demo" className="btn btn-primary">Get your own free demo</Link>
       </Notice>
     );
@@ -87,8 +87,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const trialDaysLeft = clinic?.status === 'trial' && clinic.trial_ends_at
-    ? Math.max(0, Math.ceil((new Date(clinic.trial_ends_at).getTime() - Date.now()) / 864e5))
+  const trialDaysLeft = clinic?.status === 'trial' && clinic.expires_at
+    ? Math.max(0, Math.ceil((new Date(clinic.expires_at).getTime() - Date.now()) / 864e5))
     : null;
   const forwardedToday = rows.filter((r) => r.outcome === 'forwarded' && dayKey(r.created_at, config.timezone) === today).length;
   const nav: { href: string; label: string; icon: IconName; badge?: number; cls?: string }[] = [

@@ -17,6 +17,7 @@ export const clinicConfig: ClinicConfig = {
   primary: '#1593a3',
   accent: '#2bb6c4',
   preset,
+  countryCode: '971',
   timezone: 'Asia/Dubai',
   openHour: 9,
   closeHour: 18,

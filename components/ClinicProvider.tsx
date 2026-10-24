@@ -163,7 +163,7 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     if (!supabase || !userId || mode !== 'app') return;
     let cancelled = false;
     Promise.all([
-      supabase.from('clinics').select('id, slug, name, status, config, demo_mode, retention_days, trial_ends_at').order('name'),
+      supabase.from('clinics').select('id, slug, name, status, config, demo_mode, retention_days, expires_at').order('name'),
       supabase.from('platform_admins').select('user_id').eq('user_id', userId).maybeSingle(),
     ]).then(([c, a]) => {
       if (cancelled) return;

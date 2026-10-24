@@ -12,10 +12,21 @@ create table if not exists public.clinics (
   config         jsonb not null default '{}'::jsonb,   -- ClinicConfig from the Settings page
   demo_mode      boolean not null default true,
   retention_days integer not null default 7 check (retention_days in (3, 7)),
-  trial_ends_at  timestamptz,
+  expires_at     timestamptz,                          -- demo: created + 7 days; trial: start + 7 days
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
 );
+
+-- (re-run safety for databases created with an earlier draft of this file)
+alter table public.clinics add column if not exists expires_at timestamptz;
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'clinics' and column_name = 'trial_ends_at') then
+    update public.clinics set expires_at = coalesce(expires_at, trial_ends_at);
+    alter table public.clinics drop column trial_ends_at;
+  end if;
+end;
+$$;
 
 drop trigger if exists clinics_touch on public.clinics;
 create trigger clinics_touch before update on public.clinics
@@ -105,6 +116,47 @@ $$;
 alter table public.activity alter column clinic_id set not null;
 
 -- ---------------------------------------------------------------------------
+-- Phone masking for any country: local numbers (0…) use the clinic's own
+-- calling code from clinics.config.countryCode (default 971).
+-- ---------------------------------------------------------------------------
+create or replace function public.mask_phone(p text, local_code text)
+returns text language plpgsql immutable set search_path = '' as $$
+declare
+  d     text;
+  cc    text;
+  codes text[] := array['212','213','216','218','234','254','255','256','351','352','353','354','355','356','357','358','359','370','371','372','373','374','375','376','377','380','381','382','385','386','387','389','420','421','880','960','961','962','963','964','965','966','967','968','970','971','972','973','974','975','976','977','992','993','994','995','996','998','20','27','30','31','32','33','34','36','39','40','41','43','44','45','46','47','48','49','51','52','53','54','55','56','57','58','60','61','62','63','64','65','66','81','82','84','86','90','91','92','93','94','95','98','1','7'];
+  c     text;
+  rest  text;
+begin
+  if p is null or p = '' or position('*' in p) > 0 then
+    return p;
+  end if;
+  d := regexp_replace(p, '\D', '', 'g');
+  if left(d, 2) = '00' then d := substr(d, 3);
+  elsif left(d, 1) = '0' then d := coalesce(nullif(local_code, ''), '971') || substr(d, 2);
+  end if;
+  if length(d) < 7 then return '***'; end if;
+  cc := left(d, 3);
+  foreach c in array codes loop
+    if left(d, length(c)) = c then cc := c; exit; end if;
+  end loop;
+  rest := substr(d, length(cc) + 1);
+  return '+' || cc || ' ' || left(rest, 2) || ' *** ' || right(rest, 4);
+end;
+$$;
+
+create or replace function public.activity_mask_phone()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  new.phone_masked := public.mask_phone(
+    new.phone_masked,
+    (select regexp_replace(coalesce(c.config ->> 'countryCode', ''), '\D', '', 'g') from public.clinics c where c.id = new.clinic_id)
+  );
+  return new;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Access helpers (security definer so policies don't recurse)
 -- ---------------------------------------------------------------------------
 create or replace function public.is_platform_admin()
@@ -140,7 +192,7 @@ drop policy if exists "owners update clinic" on public.clinics;
 create policy "owners update clinic" on public.clinics
   for update to authenticated using (public.is_clinic_owner(id)) with check (public.is_clinic_owner(id));
 
--- Owners may change their settings, but not their own status or trial end date.
+-- Owners may change their settings, but not their own status or expiry date.
 revoke update on public.clinics from authenticated;
 grant update (name, config, demo_mode, retention_days) on public.clinics to authenticated;
 
@@ -167,14 +219,14 @@ create policy "members read activity" on public.activity
 
 -- ---------------------------------------------------------------------------
 -- Public demo access: only these two functions are callable without login,
--- and they only expose clinics whose status is 'demo'.
+-- and they only expose clinics whose status is 'demo' and that haven't expired (7 days).
 -- ---------------------------------------------------------------------------
 create or replace function public.get_demo(p_slug text)
 returns table (id uuid, slug text, name text, config jsonb)
 language sql stable security definer set search_path = '' as $$
   select c.id, c.slug, c.name, c.config
   from public.clinics c
-  where c.slug = p_slug and c.status = 'demo';
+  where c.slug = p_slug and c.status = 'demo' and (c.expires_at is null or c.expires_at > now());
 $$;
 
 create or replace function public.track_demo_view(p_slug text)
@@ -214,8 +266,8 @@ begin
     s := base || '-' || substr(md5(random()::text), 1, 4);
   end loop;
 
-  insert into public.clinics (slug, name, status, config, demo_mode, retention_days)
-  values (s, p_clinic ->> 'name', 'demo', coalesce(p_clinic -> 'config', '{}'::jsonb), true, 7)
+  insert into public.clinics (slug, name, status, config, demo_mode, retention_days, expires_at)
+  values (s, p_clinic ->> 'name', 'demo', coalesce(p_clinic -> 'config', '{}'::jsonb), true, 7, now() + interval '7 days')
   returning id into cid;
 
   insert into public.leads (clinic_id, contact_name, phone, email, clinic_name, clinic_type, city, website, source, message, status)
@@ -245,7 +297,7 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Daily job: per-clinic demo-mode clean-up + expire finished trials.
+-- Daily job: per-clinic demo-mode clean-up + expire finished demos and trials.
 -- (Same cron job name as 001, so this replaces the old function body.)
 -- ---------------------------------------------------------------------------
 create or replace function public.purge_old_activity()
@@ -261,7 +313,7 @@ begin
   get diagnostics deleted = row_count;
 
   update public.clinics set status = 'expired'
-  where status = 'trial' and trial_ends_at is not null and trial_ends_at < now();
+  where status in ('demo', 'trial') and expires_at is not null and expires_at < now();
 
   return deleted;
 end;

@@ -24,7 +24,14 @@ const NAMES = [
   'Lucas Martin', 'Priya Sharma', 'Elena Ivanova', 'James Walker', 'Noor Al Hashimi', 'Sofia Rossi', 'Hamza Qureshi',
 ];
 const LANGS: [string, number][] = [['English', 0.5], ['Arabic', 0.25], ['Urdu', 0.08], ['Hindi', 0.05], ['Russian', 0.05], ['French', 0.04], ['German', 0.03]];
-const PREFIXES = ['50', '52', '54', '55', '56', '58'];
+const UAE_PREFIXES = ['50', '52', '54', '55', '56', '58'];
+
+/** Sample mobile number in the clinic's country (raw — masked on display). */
+function samplePhone(r: Rand, countryCode: string) {
+  const cc = (countryCode || '971').replace(/\D/g, '');
+  const prefix = cc === '971' ? pick(r, UAE_PREFIXES) : String(int(r, 30, 99));
+  return `+${cc}${prefix}${int(r, 1000000, 9999999)}`;
+}
 
 type Rand = () => number;
 const pick = <T,>(r: Rand, a: T[]) => a[Math.floor(r() * a.length)];
@@ -72,7 +79,7 @@ export function generateDemo(config: ClinicConfig, now = new Date()): Activity[]
     const day = addDays(today, offset);
     const r = mulberry32(hash(`${day}|${config.preset}|${doctors.map((d) => d.name).join()}`));
     const at = () => zonedToDate(day, int(r, 6 * 60, 23 * 60), tz).toISOString();
-    const phone = () => `+971${pick(r, PREFIXES)}${int(r, 1000000, 9999999)}`;
+    const phone = () => samplePhone(r, config.countryCode);
     let i = 0;
     const push = (row: Omit<Activity, 'id'>) => rows.push({ id: `demo-${day}-${i++}`, ...row });
 
@@ -137,7 +144,7 @@ export function randomLiveRow(config: ClinicConfig): Activity {
     created_at: new Date().toISOString(),
     channel,
     patient_name: channel === 'call' && r() < 0.4 ? null : pick(r, NAMES),
-    phone_masked: `+971${pick(r, PREFIXES)}${int(r, 1000000, 9999999)}`,
+    phone_masked: samplePhone(r, config.countryCode),
     language: weighted(r, LANGS),
     summary: pick(r, preset.quotes[outcome]),
     outcome,

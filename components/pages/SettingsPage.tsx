@@ -105,6 +105,7 @@ export default function SettingsPage() {
               <label>Accent colour<input type="color" value={draft.accent} onChange={(e) => set('accent', e.target.value)} /></label>
             </div>
             <div className="form-row">
+              <label>Country code<input value={draft.countryCode} inputMode="numeric" maxLength={4} onChange={(e) => set('countryCode', e.target.value.replace(/\D/g, ''))} placeholder="971" /></label>
               <label>Timezone<input value={draft.timezone} onChange={(e) => set('timezone', e.target.value)} placeholder="Asia/Dubai" /></label>
               <label>Opens<input type="number" min={0} max={23} value={draft.openHour} onChange={(e) => set('openHour', Number(e.target.value))} /></label>
               <label>Closes<input type="number" min={1} max={24} value={draft.closeHour} onChange={(e) => set('closeHour', Number(e.target.value))} /></label>

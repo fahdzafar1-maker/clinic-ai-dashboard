@@ -62,15 +62,21 @@ Every clinic is one row in `clinics` (multi-tenant). One database and one app se
 | Phase | Deliverable | Status |
 |---|---|---|
 | 0 | Dashboard (KPIs, calendar, feed, calls, WhatsApp, reports, settings), Supabase, Vercel | ✅ done |
-| **1** | **Multi-clinic database + Instant Demo** (`/get-demo`, `/demo/<clinic>`, DEMO-01 workflow: build demo, enrich from website, send link by WhatsApp/email, notify Fahd, track demo views) | 🔨 in progress |
+| **1** | **Multi-clinic database + Instant Demo** (`/get-demo`, `/demo/<clinic>` valid for 7 days, DEMO-01 workflow: build demo, enrich from website, send link by WhatsApp/email, notify Fahd, track demo views) | 🔨 in progress |
 | 2 | **Trial engine**: Fahd starts a 7-day trial with one click → login created and sent, data import (CSV/Sheets), day-1/3/6 nudges, day-6 usefulness survey, auto-expiry | next |
 | 3 | **Front desk live**: CD-01 activity logger, phone/WhatsApp/web agents as per-clinic templates, guardrails + first eval sets | |
 | 4 | **Accounts & finance**: expenses (receipt photo → AI), income, daily/monthly P&L, reports | |
 | 5 | Follow-ups, reviews, lead-gen CRM, social media | |
 | 6 | Inventory, staff, support desk, billing | |
 
-## 6. Compliance — must check before real patient data
+## 6. Compliance — handled per client at onboarding
 
-- **UAE**: Federal Law No. 2 of 2019 (ICT in health fields) generally requires health data to be **stored inside the UAE**, and DHA (Dubai) / DOH (Abu Dhabi) have their own rules. The current Supabase project is in Mumbai. For demos and sample data this is fine; for real patient records of UAE clinics, confirm requirements and plan UAE hosting (e.g. self-hosted Supabase/Postgres on an AWS/Azure UAE region) before go-live.
-- **EU clients** (e.g. Slovenia): GDPR — data processing agreement, EU hosting region.
-- Call recording consent message at the start of AI phone calls.
+The product is global: any clinic founder or owner, in any country, can request a demo.
+
+- **Demo (7 days)** runs on sample data only, so no patient data is involved. Demo links expire automatically after 7 days.
+- **When a client decides to go ahead**, we ask about their country's rules and set them up before their real data goes in. Typical questions:
+  - Where must health data be stored? Some countries (e.g. the UAE) require local hosting; others need an EU region (GDPR).
+  - Is a data processing agreement or privacy notice required?
+  - Do AI phone calls need a recording-consent message?
+  - Which messaging rules apply (WhatsApp opt-in, marketing consent)?
+- Hosting is then chosen per client: the shared project for most clients, or a dedicated database in the required region when the law demands it.
