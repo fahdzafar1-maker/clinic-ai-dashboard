@@ -82,7 +82,7 @@ export default function GetDemoPage() {
             <div><span className="muted">Your AI receptionist</span><a className="strong" href={`tel:${DEMO_VOICE_NUMBER.replace(/[^+\d]/g, '')}`}>{DEMO_VOICE_NUMBER}</a></div>
             {demoCode && <div><span className="muted">Your demo code</span><b>{demoCode}</b></div>}
           </div>
-          <p className="hint">Call from {form.phone} and the receptionist answers as {form.clinic_name}. Calling from another phone? Just mention your demo code. Every call appears in your demo within seconds.</p>
+          <p className="hint">Call from {form.phone} and the receptionist answers as {form.clinic_name}. Want to call from another phone too? Tell us the number and we'll add it to your demo. Every call appears in your demo within seconds.</p>
         </div>
       </div>
     );

@@ -44,7 +44,7 @@ export function DemoNumbersCard() {
         <div>
           <span className="muted">Your demo code</span>
           <span className="num">{demoCode ?? '—'}</span>
-          <span className="hint">Mention it when calling from a different phone.</span>
+          <span className="hint">Quote it to us to add more phones to your demo.</span>
         </div>
       </div>
       <p className="hint demo-numbers-note">These are shared demo numbers. With the full product, the AI runs on your clinic's own phone and WhatsApp numbers.</p>
@@ -232,7 +232,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span>
               <b>Live demo for {config.name}.</b> Call your AI receptionist on{' '}
               <a className="strong" href={`tel:${DEMO_VOICE_NUMBER.replace(/[^+\d]/g, '')}`}>{DEMO_VOICE_NUMBER}</a>
-              {demoCode && <> (demo code <b>{demoCode}</b>)</>} — your call appears here within seconds.
+ from the number you gave us — your call appears here within seconds.
             </span>
             {BOOK_CALL_URL && <a href={BOOK_CALL_URL} target="_blank" rel="noreferrer" className="btn btn-primary">Start my 7-day free trial</a>}
           </div>

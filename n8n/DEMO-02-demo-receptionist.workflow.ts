@@ -25,10 +25,10 @@ const readMessage = node({
     parameters: {
       mode: 'runOnceForEachItem',
       language: 'javaScript',
-      jsCode: "const h = $json.headers || {};\nconst m = ($json.body && $json.body.message) || {};\nconst call = m.call || {};\nconst caller = (m.customer && m.customer.number) || (call.customer && call.customer.number) || '';\nreturn { json: { authorized: h['x-clinic-os-key'] === 'REPLACE_WITH_VAPI_WEBHOOK_SECRET', type: String(m.type || 'unknown'), caller, message: m } };"
+      jsCode: "const h = $json.headers || {};\nconst m = ($json.body && $json.body.message) || {};\nconst call = m.call || {};\nconst fromNumber = (m.customer && m.customer.number) || (call.customer && call.customer.number) || '';\nreturn { json: { authorized: h['x-clinic-os-key'] === 'REPLACE_WITH_VAPI_WEBHOOK_SECRET', type: String(m.type || 'unknown'), from_number: fromNumber, message: m } };"
     }
   },
-  output: [{ authorized: true, type: 'assistant-request', caller: '+971501234567', message: { type: 'assistant-request' } }]
+  output: [{ authorized: true, type: 'assistant-request', from_number: '+971501234567', message: { type: 'assistant-request' } }]
 });
 
 const routeEvent = switchCase({
@@ -75,7 +75,7 @@ const findClinicForCall = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ p_phone: $json.caller }) }}'),
+      jsonBody: expr('{{ JSON.stringify({ p_phone: $json.from_number }) }}'),
       options: { timeout: 4000 }
     },
     credentials: { supabaseApi: { id: 'dyGNoS79aELyAcvw', name: 'Supabase - Clinic Dashboard' } }
@@ -116,7 +116,7 @@ const respondReportOk = node({
     position: [700, 420],
     parameters: { respondWith: 'json', responseBody: '{"ok":true}', options: { responseCode: 200 } }
   },
-  output: [{ authorized: true, type: 'end-of-call-report', caller: '+971501234567', message: { type: 'end-of-call-report' } }]
+  output: [{ authorized: true, type: 'end-of-call-report', from_number: '+971501234567', message: { type: 'end-of-call-report' } }]
 });
 
 const findClinicForReport = node({
@@ -133,7 +133,7 @@ const findClinicForReport = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr("{{ JSON.stringify({ p_phone: $('Read Vapi Message').item.json.caller }) }}"),
+      jsonBody: expr("{{ JSON.stringify({ p_phone: $('Read Vapi Message').item.json.from_number }) }}"),
       options: { timeout: 10000 }
     },
     credentials: { supabaseApi: { id: 'dyGNoS79aELyAcvw', name: 'Supabase - Clinic Dashboard' } }

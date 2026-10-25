@@ -38,6 +38,8 @@ export default function SettingsPage() {
   // Raw text of the languages box, so typing "sl, h" isn't wiped before a code is complete.
   const [langText, setLangText] = useState((config.receptionist?.languages ?? []).join(', '));
   useEffect(() => setLangText((config.receptionist?.languages ?? []).join(', ')), [config]);
+  const [numbersText, setNumbersText] = useState((config.receptionist?.callerNumbers ?? []).join(', '));
+  useEffect(() => setNumbersText((config.receptionist?.callerNumbers ?? []).join(', ')), [config]);
   const setRc = (patch: Partial<NonNullable<ClinicConfig['receptionist']>>) =>
     setDraft((d) => ({ ...d, receptionist: { ...(d.receptionist ?? {}), ...patch } }));
 
@@ -177,6 +179,13 @@ export default function SettingsPage() {
                 </select>
               </label>
             </div>
+            <label>Extra caller numbers <span className="muted">(calls from these numbers reach this clinic's receptionist — e.g. your own test phone, the owner's staff)</span>
+              <input value={numbersText} placeholder="+92 333 1234567, +386 41 000000"
+                onChange={(e) => {
+                  setNumbersText(e.target.value);
+                  setRc({ callerNumbers: e.target.value.split(/[,;\n]+/).map((x) => x.trim()).filter((x) => x.replace(/\D/g, '').length >= 8).slice(0, 10) });
+                }} />
+            </label>
             <label>Greeting <span className="muted">(first sentence of every call)</span>
               <input value={rc.greeting ?? ''} maxLength={300} placeholder={`Hello, thank you for calling ${draft.name}. This is Sara, the AI receptionist. How can I help you today?`} onChange={(e) => setRc({ greeting: e.target.value })} />
             </label>

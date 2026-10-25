@@ -74,6 +74,8 @@ export interface ReceptionistConfig {
   languages?: string[];
   /** Free-text clinic knowledge: hours, team, prices, address, FAQs. */
   knowledge?: string;
+  /** More phone numbers that should reach this clinic's receptionist (e.g. a test phone, staff phones). */
+  callerNumbers?: string[];
   /** vapi = Vapi Voices V2 (cheaper), elevenlabs = ElevenLabs (premium). */
   voice?: 'vapi' | 'elevenlabs';
 }
