@@ -88,8 +88,14 @@ function normalize(r: Partial<Activity> & { id: string | number }): Activity {
   };
 }
 
-const configFrom = (name: string, cfg: Partial<ClinicConfig> | null | undefined): ClinicConfig =>
-  ({ ...defaults, ...(cfg ?? {}), name: name || cfg?.name || defaults.name });
+/** Stored config may be partial (e.g. a fresh demo only knows its preset), so fill gaps from that preset. */
+function configFrom(name: string, cfg: Partial<ClinicConfig> | null | undefined): ClinicConfig {
+  const preset = PRESETS[cfg?.preset ?? defaults.preset] ?? PRESETS.dental;
+  const byPreset = cfg?.preset && cfg.preset !== defaults.preset
+    ? { tagline: preset.tagline, doctors: preset.doctors, services: preset.services }
+    : {};
+  return { ...defaults, ...byPreset, ...(cfg ?? {}), name: name || cfg?.name || defaults.name };
+}
 
 export function ClinicProvider({ children }: { children: React.ReactNode }) {
   const online = !!supabase;
