@@ -35,6 +35,9 @@ export default function SettingsPage() {
   const dirty = JSON.stringify(draft) !== JSON.stringify(config);
   const set = <K extends keyof ClinicConfig>(k: K, v: ClinicConfig[K]) => setDraft((d) => ({ ...d, [k]: v }));
   const rc = draft.receptionist ?? {};
+  // Raw text of the languages box, so typing "sl, h" isn't wiped before a code is complete.
+  const [langText, setLangText] = useState((config.receptionist?.languages ?? []).join(', '));
+  useEffect(() => setLangText((config.receptionist?.languages ?? []).join(', ')), [config]);
   const setRc = (patch: Partial<NonNullable<ClinicConfig['receptionist']>>) =>
     setDraft((d) => ({ ...d, receptionist: { ...(d.receptionist ?? {}), ...patch } }));
 
@@ -161,8 +164,11 @@ export default function SettingsPage() {
             <div className="form-row">
               <label>Receptionist name<input value={rc.name ?? ''} placeholder="Sara" maxLength={30} onChange={(e) => setRc({ name: e.target.value })} /></label>
               <label>Languages <span className="muted">(codes, main first)</span>
-                <input value={(rc.languages ?? []).join(', ')} placeholder="e.g. sl, hr, it, en"
-                  onChange={(e) => setRc({ languages: e.target.value.toLowerCase().split(/[\s,]+/).filter((x) => /^[a-z]{2}$/.test(x)).slice(0, 6) })} />
+                <input value={langText} placeholder="e.g. sl, hr, it, en"
+                  onChange={(e) => {
+                    setLangText(e.target.value);
+                    setRc({ languages: e.target.value.toLowerCase().split(/[\s,]+/).filter((x) => /^[a-z]{2}$/.test(x)).slice(0, 6) });
+                  }} />
               </label>
               <label>Voice
                 <select value={rc.voice ?? 'elevenlabs'} onChange={(e) => setRc({ voice: e.target.value as 'vapi' | 'elevenlabs' })}>
