@@ -34,6 +34,9 @@ export default function SettingsPage() {
   useEffect(() => setDraft(config), [config]);
   const dirty = JSON.stringify(draft) !== JSON.stringify(config);
   const set = <K extends keyof ClinicConfig>(k: K, v: ClinicConfig[K]) => setDraft((d) => ({ ...d, [k]: v }));
+  const rc = draft.receptionist ?? {};
+  const setRc = (patch: Partial<NonNullable<ClinicConfig['receptionist']>>) =>
+    setDraft((d) => ({ ...d, receptionist: { ...(d.receptionist ?? {}), ...patch } }));
 
   function applyPreset(key: PresetKey) {
     const p = PRESETS[key];
@@ -151,6 +154,32 @@ export default function SettingsPage() {
           </div>
           <p className="hint">Names must match the <code>doctor</code> value your n8n workflows send.</p>
         </Card>
+
+        {mode !== 'demo' && <Card title="AI phone receptionist" icon="phoneCall" className="span-2">
+          <p className="hint">How the AI receptionist answers calls for this clinic. Leave empty for sensible defaults (name Sara, English greeting, automatic language).</p>
+          <div className="form">
+            <div className="form-row">
+              <label>Receptionist name<input value={rc.name ?? ''} placeholder="Sara" maxLength={30} onChange={(e) => setRc({ name: e.target.value })} /></label>
+              <label>Languages <span className="muted">(codes, main first)</span>
+                <input value={(rc.languages ?? []).join(', ')} placeholder="e.g. sl, hr, it, en"
+                  onChange={(e) => setRc({ languages: e.target.value.toLowerCase().split(/[\s,]+/).filter((x) => /^[a-z]{2}$/.test(x)).slice(0, 6) })} />
+              </label>
+              <label>Voice
+                <select value={rc.voice ?? 'elevenlabs'} onChange={(e) => setRc({ voice: e.target.value as 'vapi' | 'elevenlabs' })}>
+                  <option value="elevenlabs">ElevenLabs (premium)</option>
+                  <option value="vapi">Vapi Voices (cheaper)</option>
+                </select>
+              </label>
+            </div>
+            <label>Greeting <span className="muted">(first sentence of every call)</span>
+              <input value={rc.greeting ?? ''} maxLength={300} placeholder={`Hello, thank you for calling ${draft.name}. This is Sara, the AI receptionist. How can I help you today?`} onChange={(e) => setRc({ greeting: e.target.value })} />
+            </label>
+            <label>Clinic knowledge <span className="muted">(opening hours, team, prices, address, FAQs — the AI only answers from this)</span>
+              <textarea rows={10} maxLength={12000} value={rc.knowledge ?? ''} onChange={(e) => setRc({ knowledge: e.target.value })}
+                placeholder={'OPENING HOURS: Mon-Fri 9:00-18:00...\nTEAM: Dr. ...\nPRICES: Check-up 50 EUR...'} />
+            </label>
+          </div>
+        </Card>}
 
         <Card title="Services" icon="calendarCheck">
           <div className="list-edit">

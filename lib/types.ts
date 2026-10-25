@@ -61,6 +61,21 @@ export interface ClinicConfig {
   closeHour: number;
   doctors: Doctor[];
   services: Service[];
+  /** How the AI phone receptionist talks for this clinic (used by the n8n voice workflow). */
+  receptionist?: ReceptionistConfig;
+}
+
+export interface ReceptionistConfig {
+  /** Persona name, e.g. "Ana". */
+  name?: string;
+  /** First sentence of every call, in the clinic's main language. */
+  greeting?: string;
+  /** ISO 639-1 codes the callers speak, main language first, e.g. ["sl","hr","it","en"]. Empty = automatic. */
+  languages?: string[];
+  /** Free-text clinic knowledge: hours, team, prices, address, FAQs. */
+  knowledge?: string;
+  /** vapi = Vapi Voices V2 (cheaper), elevenlabs = ElevenLabs (premium). */
+  voice?: 'vapi' | 'elevenlabs';
 }
 
 export interface AppSettings {
