@@ -22,7 +22,7 @@ npm run dev                  # http://localhost:3000
 ## 2. Set up Supabase (free tier)
 
 1. Create a project at supabase.com.
-2. **SQL Editor** → run [`supabase/migrations/001_initial.sql`](supabase/migrations/001_initial.sql), then [`002_multi_clinic.sql`](supabase/migrations/002_multi_clinic.sql) (multi-clinic + instant demos, see below). 001 creates:
+2. **SQL Editor** → run [`supabase/migrations/001_initial.sql`](supabase/migrations/001_initial.sql), then [`002_multi_clinic.sql`](supabase/migrations/002_multi_clinic.sql) (multi-clinic + instant demos) and [`003_demo_kit.sql`](supabase/migrations/003_demo_kit.sql) (demo codes, caller lookup, live demo activity). 001 creates:
    - the `activity` table with CHECK constraints, indexes, and a phone-masking trigger
    - the `settings` table (single row: `demo_mode`, `retention_days` ∈ {3, 7}, `clinic` jsonb)
    - RLS policies (signed-in users can read, and can update settings), Realtime publication, and the `purge-old-activity` pg_cron job (daily, 03:00 UTC)

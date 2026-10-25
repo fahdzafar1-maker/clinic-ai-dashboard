@@ -377,3 +377,5 @@ input[type="color"] { height: 36px; width: 100%; border: 1px solid var(--border)
   .field-grid .span-2 { grid-column: auto; }
   .banner-cta { flex-wrap: wrap; }
 }
+.demo-kit { display: grid; gap: 8px; padding: 12px 14px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, #fff); border: 1px solid color-mix(in srgb, var(--accent) 25%, #fff); }
+.demo-kit > div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }

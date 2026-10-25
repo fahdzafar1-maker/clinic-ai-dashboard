@@ -45,6 +45,8 @@ interface ClinicContext {
   isAdmin: boolean;
   /** 'missing' when /demo/<slug> doesn't exist or is no longer a demo. */
   demoState: 'none' | 'loading' | 'ok' | 'missing';
+  /** Code the owner's staff can give the shared demo receptionist / chatbot. */
+  demoCode: string | null;
   /** Prefix internal links with this so navigation stays inside a demo. */
   href: (path: string) => string;
 }
@@ -122,7 +124,8 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
   const [liveRows, setLiveRows] = useState<Activity[]>([]);
   const [dbLoaded, setDbLoaded] = useState(false);
   // demo mode
-  const [demoClinic, setDemoClinic] = useState<{ name: string; config: Partial<ClinicConfig> | null } | null>(null);
+  const [demoClinic, setDemoClinic] = useState<{ name: string; config: Partial<ClinicConfig> | null; demoCode: string | null } | null>(null);
+  const [demoActivity, setDemoActivity] = useState<Activity[]>([]);
   const [demoState, setDemoState] = useState<ClinicContext['demoState']>('none');
   const [demoOverride, setDemoOverride] = useState<ClinicConfig | null>(null);
 
@@ -152,16 +155,32 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!demoSlug) { setDemoState('none'); return; }
     setDemoOverride(null);
-    if (!supabase) { setDemoClinic({ name: defaults.name, config: null }); setDemoState('ok'); return; }
+    setDemoActivity([]);
+    if (!supabase) { setDemoClinic({ name: defaults.name, config: null, demoCode: null }); setDemoState('ok'); return; }
     setDemoState('loading');
     supabase.rpc('get_demo', { p_slug: demoSlug }).then(({ data, error }) => {
       const row = Array.isArray(data) ? data[0] : null;
       if (error || !row) { setDemoState('missing'); return; }
-      setDemoClinic({ name: row.name, config: row.config });
+      setDemoClinic({ name: row.name, config: row.config, demoCode: row.demo_code ?? null });
       setDemoState('ok');
       supabase?.rpc('track_demo_view', { p_slug: demoSlug });
     });
   }, [demoSlug]);
+
+  // Demo page: the owner's own calls and chats with the shared demo numbers, polled so they appear live.
+  useEffect(() => {
+    if (!supabase || !demoSlug || demoState !== 'ok') return;
+    let seen: Set<string> | null = null;
+    const load = () => supabase!.rpc('get_demo_activity', { p_slug: demoSlug }).then(({ data }) => {
+      const list = ((data ?? []) as Activity[]).map(normalize);
+      if (seen) list.filter((r) => !seen!.has(r.id)).forEach((r) => markNew(r.id));
+      seen = new Set(list.map((r) => r.id));
+      setDemoActivity(list);
+    });
+    load();
+    const t = setInterval(load, 10_000);
+    return () => clearInterval(t);
+  }, [demoSlug, demoState, markNew]);
 
   // App mode: clinics this user can access.
   const userId = session?.user.id;
@@ -258,16 +277,16 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
 
   // Simulated live activity while showing sample data, so the feed feels alive.
   useEffect(() => {
-    if (source !== 'sample') return;
+    if (source !== 'sample' || demoActivity.length) return;
     const t = setInterval(() => {
       const row = randomLiveRow(config);
       setSimRows((r) => [row, ...r].slice(0, 30));
       markNew(row.id);
     }, mode === 'demo' ? 15_000 : 25_000);
     return () => clearInterval(t);
-  }, [source, config, mode, markNew]);
+  }, [source, config, mode, markNew, demoActivity.length]);
 
-  const rows = source === 'live' ? liveRows : source === 'sample' ? [...simRows, ...sampleRows] : [];
+  const rows = source === 'live' ? liveRows : source === 'sample' ? [...demoActivity, ...simRows, ...sampleRows] : [];
 
   // Brand colours → CSS variables.
   useEffect(() => {
@@ -322,7 +341,7 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     mode, config, preset, labels: preset.labels, settings, rows, source, newIds, now,
     today: dayKey(now, config.timezone), online, session, authReady, signOut,
     saveConfig, saveSettings, playingId, togglePlay,
-    clinics, clinic, selectClinic, isAdmin, demoState, href,
+    clinics, clinic, selectClinic, isAdmin, demoState, href, demoCode: demoClinic?.demoCode ?? null,
   };
 
   return <Ctx.Provider value={value}>{mounted ? children : null}</Ctx.Provider>;

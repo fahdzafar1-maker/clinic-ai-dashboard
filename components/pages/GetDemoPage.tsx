@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Icon } from '@/components/Icon';
+import { DEMO_VOICE_NUMBER } from '@/components/Shell';
 import { PRESETS, PRESET_KEYS } from '@/lib/presets';
 import type { PresetKey } from '@/lib/types';
 
@@ -28,6 +29,7 @@ export default function GetDemoPage() {
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [error, setError] = useState('');
   const [demoUrl, setDemoUrl] = useState('');
+  const [demoCode, setDemoCode] = useState('');
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   async function submit(e: React.FormEvent) {
@@ -58,6 +60,7 @@ export default function GetDemoPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !(data.url || data.slug)) throw new Error(data.error || `Request failed (${res.status})`);
       setDemoUrl(data.url || `${window.location.origin}/demo/${data.slug}`);
+      setDemoCode(data.demo_code || '');
       setState('done');
     } catch (err) {
       setError((err as Error).message || 'Something went wrong. Please try again.');
@@ -75,7 +78,11 @@ export default function GetDemoPage() {
             We built a live demo for <b>{form.clinic_name}</b>. We also sent the link to your WhatsApp{form.email ? ' and email' : ''}.
           </p>
           <a className="btn btn-primary" href={demoUrl}>Open my demo <Icon name="arrowRight" /></a>
-          <p className="hint">Tip: open it on your phone too — it works everywhere.</p>
+          <div className="demo-kit">
+            <div><span className="muted">Your AI receptionist</span><a className="strong" href={`tel:${DEMO_VOICE_NUMBER.replace(/[^+\d]/g, '')}`}>{DEMO_VOICE_NUMBER}</a></div>
+            {demoCode && <div><span className="muted">Your demo code</span><b>{demoCode}</b></div>}
+          </div>
+          <p className="hint">Call from {form.phone} and the receptionist answers as {form.clinic_name}. Calling from another phone? Just mention your demo code. Every call appears in your demo within seconds.</p>
         </div>
       </div>
     );

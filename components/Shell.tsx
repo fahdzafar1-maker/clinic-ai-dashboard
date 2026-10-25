@@ -13,6 +13,8 @@ export const useSearch = () => useContext(SearchCtx);
 
 /** Where demo visitors go to talk to sales (WhatsApp/Calendly link). */
 export const BOOK_CALL_URL = process.env.NEXT_PUBLIC_BOOK_CALL_URL || '';
+/** Shared demo AI receptionist (Vapi). It answers as whichever demo clinic the caller belongs to. */
+export const DEMO_VOICE_NUMBER = process.env.NEXT_PUBLIC_DEMO_VOICE_NUMBER || '+1 (757) 844-2074';
 
 const PUBLIC_PAGES = ['/login', '/get-demo'];
 
@@ -40,7 +42,7 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
 export function Shell({ children }: { children: React.ReactNode }) {
   const {
     mode, config, labels, settings, source, session, authReady, signOut, today, rows,
-    clinics, clinic, selectClinic, isAdmin, demoState, href,
+    clinics, clinic, selectClinic, isAdmin, demoState, href, demoCode,
   } = useClinic();
   const pathname = usePathname();
   const router = useRouter();
@@ -191,7 +193,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
         {mode === 'demo' && (
           <div className="banner banner-cta">
             <Icon name="sparkle" />
-            <span><b>Live demo for {config.name}.</b> Everything here runs on sample data — this is how your AI front desk would look.</span>
+            <span>
+              <b>Live demo for {config.name}.</b> Call your AI receptionist on{' '}
+              <a className="strong" href={`tel:${DEMO_VOICE_NUMBER.replace(/[^+\d]/g, '')}`}>{DEMO_VOICE_NUMBER}</a>
+              {demoCode && <> (demo code <b>{demoCode}</b>)</>} — your call appears here within seconds.
+            </span>
             {BOOK_CALL_URL && <a href={BOOK_CALL_URL} target="_blank" rel="noreferrer" className="btn btn-primary">Start my 7-day free trial</a>}
           </div>
         )}
