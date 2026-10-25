@@ -22,6 +22,8 @@ export const DEMO_WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_DEMO_WHATSAPP_NUMBER
 export function DemoNumbersCard() {
   const { config, demoCode } = useClinic();
   const tel = (n: string) => n.replace(/[^+\d]/g, '');
+  const voiceNumber = config.receptionist?.dedicatedNumber || DEMO_VOICE_NUMBER;
+  const dedicated = !!config.receptionist?.dedicatedNumber;
   return (
     <article className="card demo-numbers">
       <div className="card-head">
@@ -31,8 +33,8 @@ export function DemoNumbersCard() {
       <div className="demo-numbers-grid">
         <div>
           <span className="muted">AI phone receptionist</span>
-          <a className="num" href={`tel:${tel(DEMO_VOICE_NUMBER)}`}>{DEMO_VOICE_NUMBER}</a>
-          <span className="hint">Call it — it answers as {config.name}.</span>
+          <a className="num" href={`tel:${tel(voiceNumber)}`}>{voiceNumber}</a>
+          <span className="hint">{dedicated ? `Your own demo line — call it from any phone and it answers as ${config.name}.` : `Call it — it answers as ${config.name}.`}</span>
         </div>
         <div>
           <span className="muted">WhatsApp chatbot</span>
@@ -231,7 +233,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Icon name="sparkle" />
             <span>
               <b>Live demo for {config.name}.</b> Call your AI receptionist on{' '}
-              <a className="strong" href={`tel:${DEMO_VOICE_NUMBER.replace(/[^+\d]/g, '')}`}>{DEMO_VOICE_NUMBER}</a>
+              <a className="strong" href={`tel:${(config.receptionist?.dedicatedNumber || DEMO_VOICE_NUMBER).replace(/[^+\d]/g, '')}`}>{config.receptionist?.dedicatedNumber || DEMO_VOICE_NUMBER}</a>
  from the number you gave us — your call appears here within seconds.
             </span>
             {BOOK_CALL_URL && <a href={BOOK_CALL_URL} target="_blank" rel="noreferrer" className="btn btn-primary">Start my 7-day free trial</a>}

@@ -179,6 +179,9 @@ export default function SettingsPage() {
                 </select>
               </label>
             </div>
+            <label>Dedicated AI number <span className="muted">(one of our Vapi numbers reserved for this clinic — anyone calling it, from any phone, reaches this receptionist)</span>
+              <input value={rc.dedicatedNumber ?? ''} placeholder="+1 757 760 9040" maxLength={25} onChange={(e) => setRc({ dedicatedNumber: e.target.value.trim() })} />
+            </label>
             <label>Extra caller numbers <span className="muted">(calls from these numbers reach this clinic's receptionist — e.g. your own test phone, the owner's staff)</span>
               <input value={numbersText} placeholder="+92 333 1234567, +386 41 000000"
                 onChange={(e) => {
