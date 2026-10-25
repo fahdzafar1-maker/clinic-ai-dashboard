@@ -13,6 +13,16 @@ export const OUTCOME_LABEL: Record<Outcome, string> = { booked: 'Booked', info: 
 export const CHANNEL_LABEL: Record<Channel, string> = { call: 'AI handled call', whatsapp: 'WhatsApp chat', voice_note: 'Voice note', web: 'Website chat' };
 const CHANNEL_ICON: Record<Channel, IconName> = { call: 'phone', whatsapp: 'whatsapp', voice_note: 'mic', web: 'globe' };
 
+/** Generated sample rows (not real calls/chats). */
+export const isExample = (a: Activity) => a.id.startsWith('demo-') || a.id.startsWith('live-');
+
+/** Real rows first, then at most `n` sample rows — so demos aren't flooded with fake numbers. */
+export function fewExamples(rows: Activity[], n = 2): Activity[] {
+  return [...rows.filter((a) => !isExample(a)), ...rows.filter(isExample).slice(0, n)];
+}
+
+const ExampleTag = () => <span className="example-tag" title="Sample entry — your real calls and chats appear above">Example</span>;
+
 export const matches = (a: Activity, q: string) =>
   !q || [a.patient_name, a.phone_masked, maskPhone(a.phone_masked), a.summary, a.doctor, a.service, a.language]
     .some((v) => v?.toLowerCase().includes(q));
@@ -178,15 +188,18 @@ export function Schedule({ appointments, day }: { appointments: Activity[]; day:
 export function ActivityFeed({ rows, limit = 7, empty = 'No activity yet today.' }: { rows: Activity[]; limit?: number; empty?: string }) {
   const { config, newIds } = useClinic();
   const q = useSearch();
-  const list = rows.filter((a) => matches(a, q)).slice(0, limit);
+  const list = fewExamples(rows.filter((a) => matches(a, q))).slice(0, limit);
   if (!list.length) return <p className="empty">{q ? 'No matches.' : empty}</p>;
+  const onlyExamples = list.every(isExample);
   return (
+    <>
+    {onlyExamples && <p className="feed-hint"><span className="live"><i /></span>Real calls and chats appear here live, above the examples.</p>}
     <ul className="feed">
       {list.map((a) => (
         <li key={a.id} className={newIds.has(a.id) ? 'new' : ''}>
           <span className={`feed-icon ${a.channel}`}><Icon name={CHANNEL_ICON[a.channel]} /></span>
           <div className="feed-body">
-            <div className="who">{a.patient_name ?? maskPhone(a.phone_masked)}</div>
+            <div className="who">{a.patient_name ?? maskPhone(a.phone_masked)}{isExample(a) && <ExampleTag />}</div>
             <div className="meta">
               {a.event === 'reminder' ? 'Reminder' : a.event === 'missed_call_recovered' ? 'Missed call recovered' : CHANNEL_LABEL[a.channel]}
               {a.duration_sec != null && ` · ${formatDurationLong(a.duration_sec)}`}
@@ -201,6 +214,7 @@ export function ActivityFeed({ rows, limit = 7, empty = 'No activity yet today.'
         </li>
       ))}
     </ul>
+    </>
   );
 }
 
@@ -285,10 +299,10 @@ export function WeeklyChart({ days = 7 }: { days?: number }) {
 }
 
 // ---------- Calls table ----------
-export function CallsTable({ rows, showDate = false, showSummary = false }: { rows: Activity[]; showDate?: boolean; showSummary?: boolean }) {
+export function CallsTable({ rows, showDate = false, showSummary = false, limit }: { rows: Activity[]; showDate?: boolean; showSummary?: boolean; limit?: number }) {
   const { config } = useClinic();
   const q = useSearch();
-  const list = rows.filter((a) => matches(a, q));
+  const list = fewExamples(rows.filter((a) => matches(a, q))).slice(0, limit);
   if (!list.length) return <p className="empty">{q ? 'No matches.' : 'No calls yet.'}</p>;
   return (
     <div className="table-wrap">
@@ -308,7 +322,8 @@ export function CallsTable({ rows, showDate = false, showSummary = false }: { ro
                 {formatTime(a.created_at, config.timezone)}
               </td>
               <td className="nowrap">
-                {a.patient_name && <div className="strong">{a.patient_name}</div>}
+                {a.patient_name && <div className="strong">{a.patient_name}{isExample(a) && <ExampleTag />}</div>}
+                {!a.patient_name && isExample(a) && <ExampleTag />}
                 <div className={a.patient_name ? 'muted' : ''}>{maskPhone(a.phone_masked)}</div>
               </td>
               <td>{formatDuration(a.duration_sec)}</td>

@@ -12,7 +12,7 @@ export default function Dashboard() {
   const { rows, today, config, labels, href, mode } = useClinic();
   const appointments = useMemo(() => appointmentsOn(rows, today, config.timezone), [rows, today, config.timezone]);
   const conversations = useMemo(() => rows.filter((r) => r.event === 'conversation'), [rows]);
-  const calls = useMemo(() => rows.filter((r) => r.channel === 'call' || r.channel === 'voice_note').slice(0, 6), [rows]);
+  const calls = useMemo(() => rows.filter((r) => r.channel === 'call' || r.channel === 'voice_note'), [rows]);
 
   return (
     <>
@@ -48,7 +48,7 @@ export default function Dashboard() {
           className="calls"
           action={<Link href={href('/ai-calls')} className="link">View all <Icon name="arrowRight" /></Link>}
         >
-          <CallsTable rows={calls} />
+          <CallsTable rows={calls} limit={6} />
         </Card>
       </section>
     </>

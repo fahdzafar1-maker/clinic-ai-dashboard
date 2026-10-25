@@ -277,14 +277,14 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
 
   // Simulated live activity while showing sample data, so the feed feels alive.
   useEffect(() => {
-    if (source !== 'sample' || demoActivity.length) return;
+    if (source !== 'sample' || mode === 'demo') return;
     const t = setInterval(() => {
       const row = randomLiveRow(config);
       setSimRows((r) => [row, ...r].slice(0, 30));
       markNew(row.id);
-    }, mode === 'demo' ? 15_000 : 25_000);
+    }, 25_000);
     return () => clearInterval(t);
-  }, [source, config, mode, markNew, demoActivity.length]);
+  }, [source, config, mode, markNew]);
 
   const rows = source === 'live' ? liveRows : source === 'sample' ? [...demoActivity, ...simRows, ...sampleRows] : [];
 
