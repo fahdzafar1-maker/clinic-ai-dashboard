@@ -17,11 +17,11 @@ interface Form {
   phone: string;
   email: string;
   consent: boolean;
-  company: string; // honeypot — real people never see or fill this
+  trap: string; // honeypot — hidden from people; named so browser autofill leaves it alone
 }
 
 const EMPTY: Form = {
-  clinic_name: '', clinic_type: 'dental', city: '', website: '', contact_name: '', phone: '', email: '', consent: false, company: '',
+  clinic_name: '', clinic_type: 'dental', city: '', website: '', contact_name: '', phone: '', email: '', consent: false, trap: '',
 };
 
 export default function GetDemoPage() {
@@ -34,7 +34,7 @@ export default function GetDemoPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (form.company) return; // bot
+    if (form.trap) { setForm((f) => ({ ...f, trap: '' })); setError('Something went wrong. Please press the button again.'); return; }
     const digits = form.phone.replace(/\D/g, '');
     if (digits.length < 8) { setError('Please enter a valid WhatsApp number with country code, e.g. +971 50 123 4567.'); return; }
     if (!WEBHOOK) { setError('Demo requests are not switched on yet. Please contact us directly.'); return; }
@@ -120,8 +120,8 @@ export default function GetDemoPage() {
           <label className="span-2">Email <span className="muted">(optional)</span>
             <input type="email" maxLength={120} value={form.email} onChange={(e) => set('email', e.target.value)} />
           </label>
-          <label className="hp" aria-hidden="true">Company
-            <input tabIndex={-1} autoComplete="off" value={form.company} onChange={(e) => set('company', e.target.value)} />
+          <label className="hp" aria-hidden="true">Leave this empty
+            <input tabIndex={-1} name="hp_trap_x9" autoComplete="off" data-lpignore="true" value={form.trap} onChange={(e) => set('trap', e.target.value)} />
           </label>
         </div>
 
