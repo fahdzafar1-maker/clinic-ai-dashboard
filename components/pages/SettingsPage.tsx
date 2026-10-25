@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { clinicConfig as fileDefaults } from '@/clinic.config';
 import { useClinic } from '@/components/ClinicProvider';
+import { DemoNumbersCard } from '@/components/Shell';
 import { Icon } from '@/components/Icon';
 import { Card } from '@/components/widgets';
 import { PRESETS, PRESET_KEYS } from '@/lib/presets';
@@ -78,6 +79,8 @@ export default function SettingsPage() {
 
       {mode === 'demo' && <div className="banner banner-sample"><Icon name="sparkle" />Try it: change the clinic type, colours, doctors or services and press Save — the whole demo updates instantly.</div>}
       {status && <div className={`banner ${status.kind === 'ok' ? 'banner-ok' : 'banner-error'}`}>{status.text}</div>}
+
+      {mode === 'demo' && <DemoNumbersCard />}
 
       <div className="settings-grid">
         <Card title="Clinic type" icon="sparkle" className="span-2">

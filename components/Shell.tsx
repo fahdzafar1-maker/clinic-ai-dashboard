@@ -15,6 +15,42 @@ export const useSearch = () => useContext(SearchCtx);
 export const BOOK_CALL_URL = process.env.NEXT_PUBLIC_BOOK_CALL_URL || '';
 /** Shared demo AI receptionist (Vapi). It answers as whichever demo clinic the caller belongs to. */
 export const DEMO_VOICE_NUMBER = process.env.NEXT_PUBLIC_DEMO_VOICE_NUMBER || '+1 (757) 844-2074';
+/** Shared demo WhatsApp chatbot. Empty until the number is live on the Cloud API (coexistence). */
+export const DEMO_WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_DEMO_WHATSAPP_NUMBER || '';
+
+/** Read-only card with the AI numbers of a demo. Prospects can't edit these. */
+export function DemoNumbersCard() {
+  const { config, demoCode } = useClinic();
+  const tel = (n: string) => n.replace(/[^+\d]/g, '');
+  return (
+    <article className="card demo-numbers">
+      <div className="card-head">
+        <h2><Icon name="phoneCall" />Your AI front desk numbers</h2>
+        <span className="locked"><Icon name="info" />Fixed for this demo</span>
+      </div>
+      <div className="demo-numbers-grid">
+        <div>
+          <span className="muted">AI phone receptionist</span>
+          <a className="num" href={`tel:${tel(DEMO_VOICE_NUMBER)}`}>{DEMO_VOICE_NUMBER}</a>
+          <span className="hint">Call it — it answers as {config.name}.</span>
+        </div>
+        <div>
+          <span className="muted">WhatsApp chatbot</span>
+          {DEMO_WHATSAPP_NUMBER
+            ? <a className="num" href={`https://wa.me/${tel(DEMO_WHATSAPP_NUMBER).replace('+', '')}`} target="_blank" rel="noreferrer">{DEMO_WHATSAPP_NUMBER}</a>
+            : <span className="num muted">Coming soon</span>}
+          <span className="hint">Message it like a patient would.</span>
+        </div>
+        <div>
+          <span className="muted">Your demo code</span>
+          <span className="num">{demoCode ?? '—'}</span>
+          <span className="hint">Mention it when calling from a different phone.</span>
+        </div>
+      </div>
+      <p className="hint demo-numbers-note">These are shared demo numbers. With the full product, the AI runs on your clinic's own phone and WhatsApp numbers.</p>
+    </article>
+  );
+}
 
 const PUBLIC_PAGES = ['/login', '/get-demo'];
 

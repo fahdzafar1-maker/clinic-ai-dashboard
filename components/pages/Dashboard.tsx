@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { useClinic } from '@/components/ClinicProvider';
+import { DemoNumbersCard } from '@/components/Shell';
 import { Icon } from '@/components/Icon';
 import { ActivityFeed, CallsTable, Card, KpiGrid, Schedule, WeeklyChart } from '@/components/widgets';
 import { appointmentsOn } from '@/lib/metrics';
 
 export default function Dashboard() {
-  const { rows, today, config, labels, href } = useClinic();
+  const { rows, today, config, labels, href, mode } = useClinic();
   const appointments = useMemo(() => appointmentsOn(rows, today, config.timezone), [rows, today, config.timezone]);
   const conversations = useMemo(() => rows.filter((r) => r.event === 'conversation'), [rows]);
   const calls = useMemo(() => rows.filter((r) => r.channel === 'call' || r.channel === 'voice_note').slice(0, 6), [rows]);
@@ -19,6 +20,8 @@ export default function Dashboard() {
         <h1>Today&apos;s Overview</h1>
         <p>AI agents are working 24/7 to bring more {labels.patients.toLowerCase()} to your clinic.</p>
       </section>
+
+      {mode === 'demo' && <DemoNumbersCard />}
 
       <KpiGrid />
 

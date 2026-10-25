@@ -379,3 +379,16 @@ input[type="color"] { height: 36px; width: 100%; border: 1px solid var(--border)
 }
 .demo-kit { display: grid; gap: 8px; padding: 12px 14px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, #fff); border: 1px solid color-mix(in srgb, var(--accent) 25%, #fff); }
 .demo-kit > div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+
+/* Read-only AI numbers in demos */
+.demo-numbers { margin-bottom: 14px; }
+.demo-numbers .locked { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); background: #f2f6f8; padding: 4px 10px; border-radius: 20px; }
+.demo-numbers .locked svg.i { width: 13px; height: 13px; }
+.demo-numbers-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 0 16px 6px; }
+.demo-numbers-grid > div { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: #fbfdfe; }
+.demo-numbers-grid .num { font-size: 17px; font-weight: 600; color: var(--text); }
+.demo-numbers-grid a.num { color: var(--primary); }
+.demo-numbers-grid .hint { margin: 0; }
+.demo-numbers-note { padding: 0 16px 14px; margin: 0; }
+.field-note { margin: -4px 0 0; }
+@media (max-width: 900px) { .demo-numbers-grid { grid-template-columns: 1fr; } }

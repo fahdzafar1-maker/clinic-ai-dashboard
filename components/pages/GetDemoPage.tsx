@@ -113,9 +113,10 @@ export default function GetDemoPage() {
           <label>Your name *
             <input required maxLength={80} value={form.contact_name} onChange={(e) => set('contact_name', e.target.value)} />
           </label>
-          <label>WhatsApp number *
+          <label>Your mobile / WhatsApp number *
             <input required type="tel" maxLength={25} value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+971 50 123 4567" />
           </label>
+          <p className="hint span-2 field-note">This is <b>your own</b> number, not the AI's. When you call the demo AI receptionist from it, the AI recognises you and answers as your clinic. The AI numbers are given to you with the demo.</p>
           <label className="span-2">Email <span className="muted">(optional)</span>
             <input type="email" maxLength={120} value={form.email} onChange={(e) => set('email', e.target.value)} />
           </label>
