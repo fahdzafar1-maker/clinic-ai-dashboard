@@ -25,7 +25,7 @@ const readMessage = node({
     parameters: {
       mode: 'runOnceForEachItem',
       language: 'javaScript',
-      jsCode: "const h = $json.headers || {};\nconst m = ($json.body && $json.body.message) || {};\nconst call = m.call || {};\nconst fromNumber = (m.customer && m.customer.number) || (call.customer && call.customer.number) || '';\nreturn { json: { authorized: h['x-clinic-os-key'] === 'REPLACE_WITH_VAPI_WEBHOOK_SECRET', type: String(m.type || 'unknown'), from_number: fromNumber, message: m } };"
+      jsCode: "const h = $json.headers || {};\nconst m = ($json.body && $json.body.message) || {};\nconst call = m.call || {};\nconst fromNumber = (m.customer && m.customer.number) || (call.customer && call.customer.number) || '';\nconst toNumber = (m.phoneNumber && m.phoneNumber.number) || (call.phoneNumber && call.phoneNumber.number) || '';\nreturn { json: { authorized: h['x-clinic-os-key'] === 'REPLACE_WITH_VAPI_WEBHOOK_SECRET', type: String(m.type || 'unknown'), from_number: fromNumber, to_number: toNumber, message: m } };"
     }
   },
   output: [{ authorized: true, type: 'assistant-request', from_number: '+971501234567', message: { type: 'assistant-request' } }]
@@ -75,7 +75,7 @@ const findClinicForCall = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ p_phone: $json.from_number }) }}'),
+      jsonBody: expr('{{ JSON.stringify({ p_phone: $json.from_number, p_to: $json.to_number }) }}'),
       options: { timeout: 4000 }
     },
     credentials: { supabaseApi: { id: 'dyGNoS79aELyAcvw', name: 'Supabase - Clinic Dashboard' } }
@@ -133,7 +133,7 @@ const findClinicForReport = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr("{{ JSON.stringify({ p_phone: $('Read Vapi Message').item.json.from_number }) }}"),
+      jsonBody: expr("{{ JSON.stringify({ p_phone: $('Read Vapi Message').item.json.from_number, p_to: $('Read Vapi Message').item.json.to_number }) }}"),
       options: { timeout: 10000 }
     },
     credentials: { supabaseApi: { id: 'dyGNoS79aELyAcvw', name: 'Supabase - Clinic Dashboard' } }
@@ -150,7 +150,7 @@ const buildActivity = node({
     parameters: {
       mode: 'runOnceForAllItems',
       language: 'javaScript',
-      jsCode: "const clinic = ($input.first() && $input.first().json) || {};\nif (!clinic.id) return [];\nconst msg = $('Read Vapi Message').first().json.message || {};\nconst a = msg.analysis || {};\nconst sd = (a.structuredData && typeof a.structuredData === 'object') ? a.structuredData : {};\nconst cfg = clinic.config || {};\nconst clean = function (v, max) { return typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null; };\n\nlet dur = Number(msg.durationSeconds);\nif (!Number.isFinite(dur) && msg.startedAt && msg.endedAt) dur = (new Date(msg.endedAt) - new Date(msg.startedAt)) / 1000;\ndur = Number.isFinite(dur) ? Math.round(dur) : null;\nif (dur !== null && dur < 3) return [];\n\nconst outcome = ['booked', 'forwarded', 'info', 'cancelled'].includes(sd.outcome) ? sd.outcome : 'info';\nlet appt = null;\nif (outcome === 'booked' && sd.appointment_time) {\n  const d = new Date(sd.appointment_time);\n  const now = Date.now();\n  if (!isNaN(d.getTime()) && d.getTime() > now - 3600e3 && d.getTime() < now + 45 * 864e5) appt = d.toISOString();\n}\nconst doctors = Array.isArray(cfg.doctors) ? cfg.doctors.map(function (x) { return x.name; }) : [];\nconst wantedDoc = clean(sd.doctor, 80);\nconst doctor = wantedDoc ? (doctors.find(function (n) { return n.toLowerCase().includes(wantedDoc.toLowerCase()) || wantedDoc.toLowerCase().includes(n.toLowerCase()); }) || wantedDoc) : null;\nconst caller = (msg.customer && msg.customer.number) || (msg.call && msg.call.customer && msg.call.customer.number) || null;\nconst recording = msg.recordingUrl || (msg.artifact && msg.artifact.recordingUrl) || null;\n\nreturn [{ json: { row: {\n  clinic_id: clinic.id,\n  channel: 'call',\n  event: 'conversation',\n  patient_name: clean(sd.patient_name, 80),\n  phone_masked: caller,\n  language: clean(sd.language, 40),\n  summary: clean(sd.summary, 300) || clean(a.summary, 300),\n  outcome: outcome,\n  duration_sec: dur,\n  recording_url: recording,\n  appointment_time: appt,\n  doctor: outcome === 'booked' ? doctor : null,\n  service: clean(sd.service, 80)\n} } }];"
+      jsCode: "const clinic = ($input.first() && $input.first().json) || {};\nconst msg = $('Read Vapi Message').first().json.message || {};\nconst meta = (msg.assistant && msg.assistant.metadata) || (msg.call && msg.call.assistant && msg.call.assistant.metadata) || {};\nconst clinicId = meta.clinic_id || clinic.id;\nif (!clinicId) return [];\nconst a = msg.analysis || {};\nconst sd = (a.structuredData && typeof a.structuredData === 'object') ? a.structuredData : {};\nconst cfg = (clinic.id === clinicId && clinic.config) ? clinic.config : {};\nconst clean = function (v, max) { return typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null; };\n\nlet dur = Number(msg.durationSeconds);\nif (!Number.isFinite(dur) && msg.startedAt && msg.endedAt) dur = (new Date(msg.endedAt) - new Date(msg.startedAt)) / 1000;\ndur = Number.isFinite(dur) ? Math.round(dur) : null;\nif (dur !== null && dur < 3) return [];\n\nconst outcome = ['booked', 'forwarded', 'info', 'cancelled'].includes(sd.outcome) ? sd.outcome : 'info';\nlet appt = null;\nif (outcome === 'booked' && sd.appointment_time) {\n  const d = new Date(sd.appointment_time);\n  const now = Date.now();\n  if (!isNaN(d.getTime()) && d.getTime() > now - 3600e3 && d.getTime() < now + 45 * 864e5) appt = d.toISOString();\n}\nconst doctors = Array.isArray(cfg.doctors) ? cfg.doctors.map(function (x) { return x.name; }) : [];\nconst wantedDoc = clean(sd.doctor, 80);\nconst doctor = wantedDoc ? (doctors.find(function (n) { return n.toLowerCase().includes(wantedDoc.toLowerCase()) || wantedDoc.toLowerCase().includes(n.toLowerCase()); }) || wantedDoc) : null;\nconst caller = (msg.customer && msg.customer.number) || (msg.call && msg.call.customer && msg.call.customer.number) || null;\nconst recording = msg.recordingUrl || (msg.artifact && msg.artifact.recordingUrl) || null;\n\nreturn [{ json: { row: {\n  clinic_id: clinicId,\n  channel: 'call',\n  event: 'conversation',\n  patient_name: clean(sd.patient_name, 80),\n  phone_masked: caller,\n  language: clean(sd.language, 40),\n  summary: clean(sd.summary, 300) || clean(a.summary, 300),\n  outcome: outcome,\n  duration_sec: dur,\n  recording_url: recording,\n  appointment_time: appt,\n  doctor: outcome === 'booked' ? doctor : null,\n  service: clean(sd.service, 80)\n} } }];"
     }
   },
   output: [{ row: { clinic_id: '11111111-2222-4333-8444-555555555555', channel: 'call', outcome: 'booked' } }]
