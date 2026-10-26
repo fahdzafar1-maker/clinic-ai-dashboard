@@ -44,6 +44,11 @@ export function DemoNumbersCard() {
           <span className="hint">Message it like a patient would.</span>
         </div>
         <div>
+          <span className="muted">Website chat</span>
+          <span className="num">Bottom-right button</span>
+          <span className="hint">Chat like a patient on your website would.</span>
+        </div>
+        <div>
           <span className="muted">Your demo code</span>
           <span className="num">{demoCode ?? '—'}</span>
           <span className="hint">Quote it to us to add more phones to your demo.</span>
@@ -77,6 +82,23 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
   );
 }
 
+/** Floating website-chat button on demo pages (same chat as the embeddable widget). */
+function ChatLauncher() {
+  const pathname = usePathname();
+  const slug = decodeURIComponent(pathname.split('/')[2] ?? '');
+  const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  if (!slug) return null;
+  return (
+    <>
+      {loaded && <iframe className={`chat-frame ${open ? 'open' : ''}`} src={`/chat/${encodeURIComponent(slug)}?embed=1`} title="Website chat" />}
+      <button className="chat-launch" onClick={() => { setLoaded(true); setOpen((o) => !o); }} aria-label="Website chat">
+        <Icon name={open ? 'chevronDown' : 'whatsapp'} />{open ? 'Close chat' : 'Try the website chat'}
+      </button>
+    </>
+  );
+}
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const {
     mode, config, labels, settings, source, session, authReady, signOut, today, rows,
@@ -87,7 +109,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [query, setQuery] = useState('');
   const [navOpen, setNavOpen] = useState(false);
 
-  const isPublic = PUBLIC_PAGES.includes(pathname);
+  const isPublic = PUBLIC_PAGES.includes(pathname) || pathname.startsWith('/chat/');
   const needsLogin = mode === 'app' && authReady && !session;
 
   useEffect(() => {
@@ -265,6 +287,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         )}
         {source === 'loading' ? <div className="loading">Loading activity…</div> : children}
       </main>
+      {mode === 'demo' && <ChatLauncher />}
     </SearchCtx.Provider>
   );
 }

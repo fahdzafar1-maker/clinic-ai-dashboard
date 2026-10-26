@@ -160,6 +160,12 @@ export default function SettingsPage() {
           <p className="hint">Names must match the <code>doctor</code> value your n8n workflows send.</p>
         </Card>
 
+        {mode === 'app' && clinic && <Card title="Website chat widget" icon="globe" className="span-2">
+          <p className="hint">Paste this one line before <code>&lt;/body&gt;</code> on the clinic website. A chat button appears bottom-right; the AI answers with this clinic&apos;s team, services and knowledge, takes bookings, and every chat shows up here.</p>
+          <pre className="code-block">{`<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget.js" data-clinic="${clinic.slug}" data-color="${draft.primary}" defer></script>`}</pre>
+          <p className="hint">Preview: <a className="link" href={`/chat/${clinic.slug}`} target="_blank" rel="noreferrer">open the chat page</a></p>
+        </Card>}
+
         {mode !== 'demo' && <Card title="AI phone receptionist" icon="phoneCall" className="span-2">
           <p className="hint">How the AI receptionist answers calls for this clinic. Leave empty for sensible defaults (name Sara, English greeting, automatic language). Default stack is the cheaper one (Deepgram + Vapi voice); languages Deepgram can't auto-detect (e.g. Arabic, Slovenian, Croatian) switch to Gladia automatically.</p>
           <div className="form">
