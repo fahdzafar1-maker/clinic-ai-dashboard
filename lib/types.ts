@@ -78,7 +78,7 @@ export interface ReceptionistConfig {
   dedicatedNumber?: string;
   /** More phone numbers that should reach this clinic's receptionist (e.g. a test phone, staff phones). */
   callerNumbers?: string[];
-  /** vapi = Vapi Voices V2 (cheaper), elevenlabs = ElevenLabs (premium). */
+  /** vapi = Vapi Voices V2 (default, cheaper), elevenlabs = ElevenLabs (premium, for accents the default voice gets wrong). */
   voice?: 'vapi' | 'elevenlabs';
 }
 

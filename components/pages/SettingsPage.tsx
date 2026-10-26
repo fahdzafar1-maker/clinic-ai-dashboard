@@ -161,7 +161,7 @@ export default function SettingsPage() {
         </Card>
 
         {mode !== 'demo' && <Card title="AI phone receptionist" icon="phoneCall" className="span-2">
-          <p className="hint">How the AI receptionist answers calls for this clinic. Leave empty for sensible defaults (name Sara, English greeting, automatic language).</p>
+          <p className="hint">How the AI receptionist answers calls for this clinic. Leave empty for sensible defaults (name Sara, English greeting, automatic language). Default stack is the cheaper one (Deepgram + Vapi voice); languages Deepgram can't auto-detect (e.g. Arabic, Slovenian, Croatian) switch to Gladia automatically.</p>
           <div className="form">
             <div className="form-row">
               <label>Receptionist name<input value={rc.name ?? ''} placeholder="Sara" maxLength={30} onChange={(e) => setRc({ name: e.target.value })} /></label>
@@ -173,9 +173,9 @@ export default function SettingsPage() {
                   }} />
               </label>
               <label>Voice
-                <select value={rc.voice ?? 'elevenlabs'} onChange={(e) => setRc({ voice: e.target.value as 'vapi' | 'elevenlabs' })}>
-                  <option value="elevenlabs">ElevenLabs (premium)</option>
-                  <option value="vapi">Vapi Voices (cheaper)</option>
+                <select value={rc.voice ?? 'vapi'} onChange={(e) => setRc({ voice: e.target.value as 'vapi' | 'elevenlabs' })}>
+                  <option value="vapi">Vapi Voices (default, cheaper)</option>
+                  <option value="elevenlabs">ElevenLabs (premium — only if the accent sounds wrong)</option>
                 </select>
               </label>
             </div>
