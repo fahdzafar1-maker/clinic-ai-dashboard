@@ -52,6 +52,8 @@ export interface ClinicConfig {
   primary: string;
   accent: string;
   preset: PresetKey;
+  /** City shown in demos and used by the AI receptionist ("a dental clinic in …"). */
+  city?: string;
   /** Calling code without + (971 UAE, 44 UK, 92 Pakistan…). Used for phone masking and sample numbers. */
   countryCode: string;
   /** IANA timezone the clinic runs in; "today" and calendar hours use it. */

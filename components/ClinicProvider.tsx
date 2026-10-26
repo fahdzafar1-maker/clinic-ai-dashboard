@@ -42,6 +42,8 @@ interface ClinicContext {
   clinics: ClinicRow[];
   clinic: ClinicRow | null;
   selectClinic: (id: string) => void;
+  /** Reload the clinic list (after admin changes such as extending a demo). */
+  refreshClinics: () => void;
   isAdmin: boolean;
   /** 'missing' when /demo/<slug> doesn't exist or is no longer a demo. */
   demoState: 'none' | 'loading' | 'ok' | 'missing';
@@ -184,6 +186,8 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
 
   // App mode: clinics this user can access.
   const userId = session?.user.id;
+  const [clinicsVersion, setClinicsVersion] = useState(0);
+  const refreshClinics = useCallback(() => setClinicsVersion((v) => v + 1), []);
   useEffect(() => {
     if (!supabase || !userId || mode !== 'app') return;
     let cancelled = false;
@@ -197,11 +201,11 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
       setClinics(list);
       setIsAdmin(!!a.data);
       const saved = readLocal<string>(LS_CLINIC);
-      setCurrentId(list.find((x) => x.id === saved)?.id ?? list.find((x) => x.status !== 'demo')?.id ?? list[0]?.id ?? null);
+      setCurrentId((cur) => list.find((x) => x.id === cur)?.id ?? list.find((x) => x.id === saved)?.id ?? list.find((x) => x.status !== 'demo')?.id ?? list[0]?.id ?? null);
       setClinicsLoaded(true);
     });
     return () => { cancelled = true; };
-  }, [userId, mode]);
+  }, [userId, mode, clinicsVersion]);
 
   const clinic = clinics.find((c) => c.id === currentId) ?? null;
 
@@ -341,7 +345,7 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     mode, config, preset, labels: preset.labels, settings, rows, source, newIds, now,
     today: dayKey(now, config.timezone), online, session, authReady, signOut,
     saveConfig, saveSettings, playingId, togglePlay,
-    clinics, clinic, selectClinic, isAdmin, demoState, href, demoCode: demoClinic?.demoCode ?? null,
+    clinics, clinic, selectClinic, refreshClinics, isAdmin, demoState, href, demoCode: demoClinic?.demoCode ?? null,
   };
 
   return <Ctx.Provider value={value}>{mounted ? children : null}</Ctx.Provider>;

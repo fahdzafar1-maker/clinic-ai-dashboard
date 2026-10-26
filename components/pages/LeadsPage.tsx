@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ActiveDemos } from '@/components/ActiveDemos';
 import { useClinic } from '@/components/ClinicProvider';
 import { Icon } from '@/components/Icon';
 import { Card } from '@/components/widgets';
@@ -80,6 +81,7 @@ export default function LeadsPage() {
         <div className="card stat"><div className="stat-label">In trial / won</div><div className="stat-value">{leads.filter((l) => l.status === 'trial' || l.status === 'won').length}</div></div>
       </section>
       {error && <div className="banner banner-error">{error}</div>}
+      <div className="demos-block"><ActiveDemos /></div>
       <Card title={`${list.length} leads`} icon="users">
         {!list.length ? <p className="empty">No demo requests yet. Share your /get-demo link to start.</p> : (
           <div className="table-wrap">
