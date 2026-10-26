@@ -10,3 +10,4 @@ next-env.d.ts
 
 # Business-internal notes (pricing, costs) — never pushed
 docs/private/
+CLAUDE.local.md
