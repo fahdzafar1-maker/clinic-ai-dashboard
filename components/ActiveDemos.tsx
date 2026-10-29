@@ -12,7 +12,7 @@ const daysLeft = (c: ClinicRow) =>
   c.expires_at ? Math.ceil((new Date(c.expires_at).getTime() - Date.now()) / 864e5) : null;
 
 /** Agency view of the prospect demos: who has which demo line, how long is left, extend or end. */
-export function ActiveDemos() {
+export function ActiveDemos({ onNew }: { onNew: () => void }) {
   const { clinics, refreshClinics } = useClinic();
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmEnd, setConfirmEnd] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export function ActiveDemos() {
     <Card
       title={`Active demos · ${live.length} running · ${freeLines.length} of ${DEMO_LINES.length} demo lines free`}
       icon="phoneCall"
-      action={<a className="link" href="/get-demo" target="_blank" rel="noreferrer">New demo <Icon name="plus" /></a>}
+      action={<button className="link" onClick={onNew}>New demo <Icon name="plus" /></button>}
     >
       {error && <div className="banner banner-error demos-error">{error}</div>}
       {!demos.length ? <p className="empty">No prospect demos yet. Create one with “New demo”.</p> : (

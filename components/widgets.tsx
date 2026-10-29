@@ -31,9 +31,11 @@ export function OutcomePill({ outcome }: { outcome: Outcome }) {
   return <span className={`pill ${outcome}`}>{OUTCOME_LABEL[outcome]}</span>;
 }
 
+/** Only sample rows play here. Real call recordings are access-controlled by Vapi: the agency
+ *  listens to them in Vapi (Call Logs) or n8n, they are not shown on clinic dashboards. */
 export function PlayButton({ row }: { row: Activity }) {
   const { playingId, togglePlay } = useClinic();
-  if (!row.recording_url) return <span className="muted">—</span>;
+  if (!row.recording_url || !isExample(row)) return <span className="muted">—</span>;
   const playing = playingId === row.id;
   return (
     <button className={`play ${playing ? 'playing' : ''}`} onClick={() => togglePlay(row)} aria-label={playing ? 'Pause recording' : 'Play recording'}>
@@ -304,6 +306,7 @@ export function CallsTable({ rows, showDate = false, showSummary = false, limit 
   const q = useSearch();
   const list = fewExamples(rows.filter((a) => matches(a, q))).slice(0, limit);
   if (!list.length) return <p className="empty">{q ? 'No matches.' : 'No calls yet.'}</p>;
+  const showRecording = list.some((a) => isExample(a) && a.recording_url);
   return (
     <div className="table-wrap">
       <table>
@@ -311,7 +314,7 @@ export function CallsTable({ rows, showDate = false, showSummary = false, limit 
           <tr>
             <th>Time</th><th>Caller</th><th>Duration</th><th>Language</th>
             {showSummary && <th>Summary</th>}
-            <th>Outcome</th><th className="ta-c">Recording</th>
+            <th>Outcome</th>{showRecording && <th className="ta-c">Recording</th>}
           </tr>
         </thead>
         <tbody>
@@ -330,7 +333,7 @@ export function CallsTable({ rows, showDate = false, showSummary = false, limit 
               <td>{a.language ?? '—'}</td>
               {showSummary && <td className="summary">{a.summary}</td>}
               <td><OutcomePill outcome={a.outcome} /></td>
-              <td className="ta-c"><PlayButton row={a} /></td>
+              {showRecording && <td className="ta-c"><PlayButton row={a} /></td>}
             </tr>
           ))}
         </tbody>

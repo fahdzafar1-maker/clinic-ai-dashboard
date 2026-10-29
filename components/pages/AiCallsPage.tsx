@@ -25,7 +25,7 @@ export default function AiCallsPage() {
     <>
       <section className="page-head">
         <h1>AI Calls</h1>
-        <p>Every phone call and voice note the AI receptionist handled, with recordings.</p>
+        <p>Every phone call and voice note the AI receptionist handled.</p>
       </section>
       <div className="toolbar">
         <Chips<Range>
