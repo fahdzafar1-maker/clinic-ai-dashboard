@@ -110,3 +110,16 @@ The product is global: any clinic founder or owner, in any country, can request 
   - Do AI phone calls need a recording-consent message?
   - Which messaging rules apply (WhatsApp opt-in, marketing consent)?
 - Hosting is then chosen per client: the shared project for most clients, or a dedicated database in the required region when the law demands it.
+
+## 8. Real-world problems to solve before the first paying client
+Researched 30 Oct 2026 — full list, status and sources in [`CLIENT-PROBLEMS.md`](CLIENT-PROBLEMS.md). Practice order:
+1. Real availability + booking tool (no invented free times, no double booking)
+2. Human hand-off (transfer in opening hours) + callback tasks on the dashboard
+3. Error alerts + daily health check (n8n, OpenAI credits, Vapi)
+4. Monthly minute caps + spam guard per clinic
+5. Consent / AI-disclosure / recording settings per clinic
+6. Eval set: auto test questions before every demo and go-live
+7. Reminders via WhatsApp templates (with DEMO-03, 24-hour window rules)
+8. Google Calendar sync, later PMS integrations
+9. Voice latency tuning (turn latency 2.4–3.1 s measured) + name spell-back + pronunciation of unusual doctor names
+10. Emergency alert to the doctor on duty
