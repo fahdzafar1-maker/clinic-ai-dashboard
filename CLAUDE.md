@@ -61,6 +61,7 @@ A complete AI automation system for clinics (dental, aesthetic & skin, physio, g
 - **n8n times are UTC**; the user is in Pakistan (UTC+5). Always tell him PKT times.
 - **OpenAI credits can run out** → DEMO-04 replies "Sorry, I could not answer just now" and DEMO-01 fails (error "You have no credits remaining"). Voice is unaffected (Vapi's own key). Auto-recharge is advised.
 - DEMO-04 webhook has `ignoreBots`: test with a browser User-Agent, otherwise 403 "Authorization data is wrong!".
+- **Website-built demos must never use the sample team** (BushyPark test, 30 Oct: Sara named "Dr. Ahmed Khan" for a UK clinic). DEMO-02 drops preset doctors when `config.enrichedAt` is set and no team was found; DEMO-01 reads home + fees + team/about + contact subpages and takes the country code from the clinic, not the lead's phone.
 - Chat AI may repeat `event = booked` on a later "yes/thanks"; n8n static data is too slow to dedupe fast turns — DB unique index `activity_web_booking_once` (migration 007) rejects the duplicate (409) and the log node continues.
 
 ## Pending (user side)
