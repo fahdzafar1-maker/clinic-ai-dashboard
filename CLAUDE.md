@@ -33,10 +33,15 @@ A complete AI automation system for clinics (dental, aesthetic & skin, physio, g
 | DEMO-01 Instant Demo Builder | `TbpLgB7lXDkTW87A` | published (26 Oct draft: website knowledge, enrichedAt, optional lead email — needs publish) |
 | DEMO-02 Demo Receptionist (Vapi) | `bUKj3tQa2OUapuSF` | published (latest 26 Oct: language lock, slower turn-taking, one-word "Halo?" idle prompt for multi-language clinics) |
 | DEMO-04 Website Chat | `ezorXc8kMGCu4R19` | published (latest: confirm before booking, no duplicate bookings, preset team fallback) |
+| DEMO-05 Booking Tools | `UEWYQcB8TEb5RvM2` | published — Vapi tools check_availability / book_appointment → Supabase `run_booking_tool` (SQL 008/009) |
+| EVAL-00 LLM Proxy | `jwjmgN4XcQ54ziSK` | for `evals/run.js` (OpenAI via n8n credential) — needs publish |
+| LANG-01 Multi-language Receptionist (template) | `rxAeLbwaKHqiHtNb` | manual run per client: keypad language menu + one assistant per language (from the Surina SUR-21/24 design) |
 - Repo copies live in `n8n/*.workflow.ts`. After changing a workflow in n8n, sync the repo copy with the **webhook secret replaced by `REPLACE_WITH_VAPI_WEBHOOK_SECRET`**.
 - Credentials used: Supabase `dyGNoS79aELyAcvw` ("Supabase - Clinic Dashboard"), OpenAI `5xsS6XmNzgYy1Xn9`, Gmail `NGZWg5dlukDUfFs9` (fahdai.services). Never use other clients' credentials.
 
 ## Decisions
+- **Multi-language clinics = keypad language menu** ("press 1 for …, 2 for …"), one assistant per language, built with LANG-01 (decision 31 Oct, after Uros rejected the single multi-language assistant; he prefers his original 1-2-3-4 product). Tell clients up front that one AI with several languages gets confused, so callers choose the language first.
+- **Main product focus = English clinics** (31 Oct): rules in code (guardrails), world-class prompt review, evals as a release gate, the problems in `docs/CLIENT-PROBLEMS.md`. No demo goes to a prospect before its evals + scripted test calls pass.
 - **Global product.** Demos use sample data; each client's legal/hosting rules (UAE local hosting, EU/GDPR) are handled at onboarding.
 - **Full feature catalogue stays** (CRM, invoicing, accounts/P&L, inventory, etc.). An outside "plan v2" note saying "no CRM/no invoicing" was wrong.
 - **Never touch the existing client project (SUR-* workflows, its Vapi number) — see CLAUDE.local.md.** Reading SUR-24 for voice-tuning reference was fine; changes are not.
@@ -71,7 +76,7 @@ A complete AI automation system for clinics (dental, aesthetic & skin, physio, g
 4. Extend the active prospect demo before it expires if needed (SQL in `CLAUDE.local.md`).
 
 ## Next steps (Claude)
-1. Uros's demo: wait for his (and his colleagues') retest of the language fix; check each call transcript and tune.
+1. English receptionist: publish EVAL-00, run `evals/run.js`, fix until the release gate passes, then publish the DEMO-02 candidate (barge-in, thinking pause). Then guardrails in code.
 2. **DEMO-03 WhatsApp bot** (coexistence) acting as each demo clinic, logging to `activity` (channel whatsapp); show the number via `NEXT_PUBLIC_DEMO_WHATSAPP_NUMBER`.
 3. New-demo form: after DEMO-01 is published, build one real demo from a brief end-to-end. Later: read website subpages (team/prices pages), not just the home page.
 4. Later phases from the roadmap: per-demo login / 7-day trial engine, Messenger/Instagram DMs, reminders & follow-ups, guardrail eval sets, accounts/CRM modules.
